@@ -1,9 +1,6 @@
-"""
-Copyright (c) Facebook, Inc. and its affiliates.
-This source code is licensed under the MIT license found in the
-LICENSE file in the root directory of this source tree.
-"""
 import json
+import time
+
 
 def create_submission_file(
   json_out_file, challenge, submission_url, model_name, model_description, nyu_data_only,
@@ -13,6 +10,7 @@ def create_submission_file(
     Creates a JSON file for submitting to the leaderboard.
     You should first run your model on the test data, save the reconstructions, zip them up,
     and upload them to a cloud storage service (like Amazon S3).
+
     Args:
         json_out_file (str): Where to save the output submission file
         challenge (str): 'singlecoil' or 'multicoil' denoting the track
@@ -45,3 +43,16 @@ def create_submission_file(
 
     with open(json_out_file, 'w') as json_file:
         json.dump(submission_data, json_file, indent=2)
+
+
+if __name__ == '__main__':
+    time_string = time.strftime('%Y-%m-%d_%H-%M', time.localtime(time.time()))
+    submission_dir = f'./submission_{time_string}.json'
+    # A url that allows direct downloads by machines. Use Google Cloud Platform or AWS, not Google Drive, etc.
+    direct_download_url = ''
+    name = 'UNET'
+    description = ''' Changed a few training tactics. '''
+    members = ['veritas9872']
+
+    create_submission_file(json_out_file=submission_dir, challenge='multicoil', submission_url=direct_download_url,
+                           model_name=name, model_description=description, nyu_data_only=True, participants=members)
