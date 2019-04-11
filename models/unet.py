@@ -8,8 +8,10 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+
 class Discriminator(nn.Module):
     print("test github")
+
 
 class ConvBlock(nn.Module):
     """

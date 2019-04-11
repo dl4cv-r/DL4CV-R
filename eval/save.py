@@ -20,3 +20,13 @@ def save_reconstructions(reconstructions, out_dir):
     for fname, recons in reconstructions.items():
         with h5py.File(out_dir / fname, 'w') as f:
             f.create_dataset('reconstruction', data=recons)
+
+
+def restore_and_run_model():
+    # TODO: Implement methods for loading from checkpointed model and predicting.
+    pass
+
+
+if __name__ == '__main__':
+    pass  # Just use this instead of argpare. Much more convenient.
+
