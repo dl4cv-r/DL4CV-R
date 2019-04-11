@@ -6,13 +6,14 @@ import numpy as np
 
 
 class HDF5Dataset(Dataset):
-    def __init__(self, data_dir, batch_size=16, training=True, acc_fac=None):
+    def __init__(self, data_dir, batch_size=16, training=True, acc_fac=None, submission=False):
         super().__init__()
 
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.training = training
         self.acc_fac = acc_fac
+        self.submission = submission
 
         if self.acc_fac is not None:  # Use both if self.acc_fac is None.
             assert self.acc_fac in (4, 8), 'Invalid acceleration factor'
@@ -70,7 +71,17 @@ class HDF5Dataset(Dataset):
         return ds_slice_arr, gt_slice_arr, fat_supp
 
     # TODO: Must turn outputs into tensors. They are currently numpy arrays or python booleans.
+    # There should be 2 modes. 1 mode with just data, labels, processed however necessary.
+    # The other mode should have all info necessary for for saving and making a submission file.
     def __getitem__(self, idx):  # Need to add transforms.
         file_name, slice_num, acc_fac = self.names_and_slices[idx]
         ds_slice, gt_slice, fat_supp = self.h5_slice_parse_fn(file_name, slice_num, acc_fac)
-        return ds_slice, gt_slice, fat_supp  # Type is ndarray float32, ndarray float32, and python boolean respectively
+
+        # TODO: Add processing here. Processed tensors will be called data, labels. Unprocessed numpy arrays will not.
+        data = None
+        labels = None
+
+        if self.submission:
+            return None  # Fill in everything here.
+        else:  # Type is ndarray float32, ndarray float32, and python boolean respectively
+            return data, labels  # Just data and labels here.
