@@ -29,6 +29,8 @@ def psnr(gt, pred):
     return compare_psnr(gt, pred, data_range=gt.max())
 
 
+# This is an incorrect implementation of SSIM measuring. No window size, no sigma specification, etc.
+# For more detail, see the SSIM documentation on skimage.
 def ssim(gt, pred):
     """ Compute Structural Similarity Index Metric (SSIM). """
     return compare_ssim(
@@ -77,20 +79,21 @@ class Metrics:
         )
 
 
-def evaluate(args, recons_key):
+def evaluate(args):  # Terrible coding style. Use Pycharm or something...
     metrics = Metrics(METRIC_FUNCS)
 
     for tgt_file in args.target_path.iterdir():
-        with h5py.File(tgt_file) as target, h5py.File(
-          args.predictions_path / tgt_file.name) as recons:
+        with h5py.File(tgt_file, mode='r') as target, h5py.File(
+          args.predictions_path / tgt_file.name, mode='r') as recons:
             if args.acquisition and args.acquisition != target.attrs['acquisition']:
-                continue
-            target = target[recons_key].value
-            recons = recons['reconstruction'].value
+                continue  # Skips if acquisition type is not the one specified (works only if specified).
+            target = target['0'][()]
+            recons = recons['reconstruction'][()]
             metrics.push(target, recons)
     return metrics
 
 
+# TODO: Change this to an easier to use form, instead of command line, which can be irritating.
 if __name__ == '__main__':
     parser = ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--target-path', type=pathlib.Path, required=True,
@@ -104,6 +107,5 @@ if __name__ == '__main__':
                              'for evaluation. By default, all volumes are included.')
     args = parser.parse_args()
 
-    recons_key = 'reconstruction_rss' if args.challenge == 'multicoil' else 'reconstruction_esc'
-    metrics = evaluate(args, recons_key)
+    metrics = evaluate(args)
     print(metrics)
