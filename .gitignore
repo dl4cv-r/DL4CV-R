@@ -111,5 +111,3 @@ venv.bak/
 *.iml
 *.xml
 *.zip
-*.tar
-*.gz
