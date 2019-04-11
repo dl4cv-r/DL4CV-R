@@ -105,6 +105,11 @@ venv.bak/
 
 # Project Specific
 *.h5
+*.hdf5
+*.npy
 *.pt
 *.iml
 *.xml
+*.zip
+*.tar
+*.gz
