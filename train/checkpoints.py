@@ -27,6 +27,8 @@ class CheckpointManager:  # Don't know if this works in graph mode...
             print('Appending to previous Checkpoint record file!')
             record_file = open(record_path, mode='a')
 
+        print(f'Checkpoint List for {ckpt_path}', file=self.record_file)
+
         self.model = model
         self.optimizer = optimizer
         self.ckpt_path = ckpt_path
@@ -34,11 +36,9 @@ class CheckpointManager:  # Don't know if this works in graph mode...
         self.save_counter = 0
         self.record_file = record_file  # No way to close this until program finishes execution
         self.record_dict = dict()
-        print(f'Checkpoint List', file=self.record_file)
 
     def save(self, ckpt_name=None):
         save_dict = {'model_state_dict': self.model.state_dict(), 'optimizer_state_dict': self.optimizer.state_dict()}
-
         save_path = self.ckpt_path / (f'{ckpt_name}.tar' if ckpt_name else f'ckpt_{self.save_counter:03d}.tar')
 
         self.save_counter += 1
@@ -57,6 +57,3 @@ class CheckpointManager:  # Don't know if this works in graph mode...
 
     def load_latest(self, load_root):
         pass
-
-
-
