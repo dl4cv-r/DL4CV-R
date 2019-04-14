@@ -108,6 +108,7 @@ venv.bak/
 *.hdf5
 *.npy
 *.pt
+*.pth
 *.iml
 *.xml
 *.zip

@@ -1,16 +1,6 @@
-"""
-Copyright (c) Facebook, Inc. and its affiliates.
-This source code is licensed under the MIT license found in the
-LICENSE file in the root directory of this source tree.
-"""
-
 import torch
 from torch import nn
 from torch.nn import functional as F
-
-
-class Discriminator(nn.Module):
-    print("test github")
 
 
 class ConvBlock(nn.Module):
@@ -43,14 +33,14 @@ class ConvBlock(nn.Module):
             nn.Dropout2d(drop_prob)
         )
 
-    def forward(self, input):
+    def forward(self, inputs):
         """
         Args:
-            input (torch.Tensor): Input tensor of shape [batch_size, self.in_chans, height, width]
+            inputs (torch.Tensor): Input tensor of shape [batch_size, self.in_chans, height, width]
         Returns:
             (torch.Tensor): Output tensor of shape [batch_size, self.out_chans, height, width]
         """
-        return self.layers(input)
+        return self.layers(inputs)
 
     def __repr__(self):
         return f'ConvBlock(in_chans={self.in_chans}, out_chans={self.out_chans}, ' \
@@ -101,15 +91,15 @@ class UnetModel(nn.Module):
             nn.Conv2d(out_chans, out_chans, kernel_size=1),
         )
 
-    def forward(self, input):
+    def forward(self, inputs):
         """
         Args:
-            input (torch.Tensor): Input tensor of shape [batch_size, self.in_chans, height, width]
+            inputs (torch.Tensor): Input tensor of shape [batch_size, self.in_chans, height, width]
         Returns:
             (torch.Tensor): Output tensor of shape [batch_size, self.out_chans, height, width]
         """
         stack = []
-        output = input
+        output = inputs
         # Apply down-sampling layers
         for layer in self.down_sample_layers:
             output = layer(output)
@@ -121,6 +111,6 @@ class UnetModel(nn.Module):
         # Apply up-sampling layers
         for layer in self.up_sample_layers:
             output = F.interpolate(output, scale_factor=2, mode='bilinear', align_corners=False)
-            output = torch.cat([output, stack.pop()], dim=1)
+            output = torch.cat((output, stack.pop()), dim=1)
             output = layer(output)
         return self.conv2(output)

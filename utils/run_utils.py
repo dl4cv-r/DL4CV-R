@@ -15,7 +15,7 @@ def initialize(ckpt_dir):
             print('Could not make Checkpoint root directory')
 
     run_number = sum([ckpt.is_dir() for ckpt in ckpt_path.iterdir()]) + 1
-    time_string = time.strftime('%Y-%m-%d %H%M%S', time.localtime(time.time()))
+    time_string = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))
     run_name = f'Trial {run_number:02d}  {time_string}'
 
     try:  # TF checkpoints need separate directories for separate runs.
