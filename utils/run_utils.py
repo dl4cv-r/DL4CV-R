@@ -36,7 +36,7 @@ def save_dict_as_json(dict_data, log_dir, save_name):
         json.dump(dict_data, jf, indent=2, sort_keys=True)
 
 
-def get_logger(name, save_file=None):
+def get_logger(name, save_file=None, suffix='.log'):
 
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
@@ -48,7 +48,7 @@ def get_logger(name, save_file=None):
     logger.addHandler(c_handler)
 
     if save_file:
-        f_handler = logging.FileHandler(save_file, mode='a')
+        f_handler = logging.FileHandler(str(save_file) + suffix, mode='a')
         f_handler.setLevel(logging.INFO)
         f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         f_handler.setFormatter(f_format)

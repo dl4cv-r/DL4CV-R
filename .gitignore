@@ -114,3 +114,4 @@ venv.bak/
 *.zip
 *.tar
 *.gz
+*.json

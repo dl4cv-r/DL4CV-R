@@ -45,14 +45,26 @@ def create_submission_file(
         json.dump(submission_data, json_file, indent=2)
 
 
-if __name__ == '__main__':
+def main():
+    multi_coil = True
+    challenge = 'multicoil' if multi_coil else 'singlecoil'
+
     time_string = time.strftime('%Y-%m-%d_%H-%M', time.localtime(time.time()))
-    submission_dir = f'./submission_{time_string}.json'
+
+    submission_dir = f'submissions/multi_coil_zero_submission_{time_string}.json'
     # A url that allows direct downloads by machines. Use Google Cloud Platform or AWS, not Google Drive, etc.
-    direct_download_url = ''
-    name = 'UNET'
-    description = ''' Changed a few training tactics. '''
+    direct_download_url = \
+        'https://storage.googleapis.com/fastmri-challenge-submissions/multicoil_test_zero_submission.zip'
+
+    name = 'Nothing'
+    description = '''
+    The purpose of this submission is to check the quality of the aliased multi-coil images without any reconstruction.
+    '''
     members = ['veritas9872']
 
-    create_submission_file(json_out_file=submission_dir, challenge='multicoil', submission_url=direct_download_url,
+    create_submission_file(json_out_file=submission_dir, challenge=challenge, submission_url=direct_download_url,
                            model_name=name, model_description=description, nyu_data_only=True, participants=members)
+
+
+if __name__ == '__main__':
+    main()

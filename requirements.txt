@@ -1,3 +1,6 @@
+tqdm
+tensorboardX
+runstats
 torchvision
 torch
 numpy

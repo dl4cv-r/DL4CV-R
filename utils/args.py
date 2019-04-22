@@ -21,16 +21,14 @@ class Args(argparse.ArgumentParser):
 
         super().__init__(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        self.add_argument('--seed', default=42, type=int, help='Seed for random number generators')
         self.add_argument('--resolution', default=320, type=int, help='Resolution of images')
 
         # Data parameters
         self.add_argument('--challenge', choices=['singlecoil', 'multicoil'], required=True,
                           help='Which challenge')
+
         self.add_argument('--data-path', type=pathlib.Path, required=True,
                           help='Path to the dataset')
-        self.add_argument('--sample-rate', type=float, default=1.,
-                          help='Fraction of total volumes to include')
 
         # Mask parameters
         self.add_argument('--accelerations', nargs='+', default=[4, 8], type=int,
@@ -43,3 +41,10 @@ class Args(argparse.ArgumentParser):
 
         # Override defaults with passed overrides
         self.set_defaults(**overrides)
+
+
+def create_arg_parser(**overrides):
+    parser = argparse.ArgumentParser()
+    parser.set_defaults(**overrides)
+
+    return parser
