@@ -115,3 +115,4 @@ venv.bak/
 *.tar
 *.gz
 *.json
+*.log

@@ -79,21 +79,22 @@ class Metrics:
         )
 
 
-def evaluate(args):  # Terrible coding style. Use Pycharm or something...
+def evaluate(args, recons_key):
     metrics = Metrics(METRIC_FUNCS)
 
     for tgt_file in args.target_path.iterdir():
         with h5py.File(tgt_file, mode='r') as target, h5py.File(
-          args.predictions_path / tgt_file.name, mode='r') as recons:
+          args.predictions_path / tgt_file.name) as recons:
             if args.acquisition and args.acquisition != target.attrs['acquisition']:
-                continue  # Skips if acquisition type is not the one specified (works only if specified).
-            target = target['0'][()]
-            recons = recons['reconstruction'][()]
+                continue
+            target = np.asarray(target[recons_key])
+            recons = np.asarray(recons['reconstruction'])
+            assert target.shape == recons.shape, 'Incorrect shape'
+            assert target.ndim == recons.ndim == 3
             metrics.push(target, recons)
     return metrics
 
 
-# TODO: Change this to an easier to use form, instead of command line, which can be irritating.
 if __name__ == '__main__':
     parser = ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--target-path', type=pathlib.Path, required=True,
@@ -105,7 +106,13 @@ if __name__ == '__main__':
     parser.add_argument('--acquisition', choices=['CORPD_FBK', 'CORPDFS_FBK'], default=None,
                         help='If set, only volumes of the specified acquisition type are used '
                              'for evaluation. By default, all volumes are included.')
-    args = parser.parse_args()
+    p_args = parser.parse_args()
 
-    metrics = evaluate(args)
-    print(metrics)
+    recons_key_ = 'reconstruction_rss' if p_args.challenge == 'multicoil' else 'reconstruction_esc'
+    metrics_ = evaluate(p_args, recons_key_)
+    print(metrics_)
+
+# python eval/evaluate.py
+# --target-path /media/veritas/E/fastMRI/multicoil_val
+# --predictions-path /home/veritas/PycharmProjects/DL4CV-R/eval/submissions/residual_unet_val_set_4
+# --challenge multicoil

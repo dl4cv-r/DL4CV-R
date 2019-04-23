@@ -10,7 +10,7 @@ from pathlib import Path
 from time import time
 import numpy as np
 
-from utils.run_utils import initialize, get_logger
+from utils.run_utils import initialize, get_logger, save_dict_as_json
 from utils.args import create_arg_parser
 from train.data_transforms import slice_normalize_and_clip
 from train.checkpoints import CheckpointManager
@@ -36,6 +36,8 @@ def main(args):
     log_path.mkdir(exist_ok=True)
 
     args.log_path = log_path
+
+    save_dict_as_json(vars(save_dict_as_json), log_dir=log_path, save_name=run_name)
 
     logger = get_logger(name=__name__, save_file=log_path / run_name)
 
@@ -68,7 +70,7 @@ def main(args):
 
     writer = SummaryWriter(log_dir=str(log_path))
 
-    example_inputs = torch.ones(size=(args.batch_size, 1, 320, 320)).to(args.device, non_blocking=True)
+    example_inputs = torch.ones(size=(args.batch_size, 1, 320, 320)).to(args.device)
     writer.add_graph(model=model, input_to_model=example_inputs, verbose=False)
 
     previous_best = np.inf
@@ -88,8 +90,8 @@ def main(args):
         tot_len = len(train_loader.dataset) // args.batch_size
         for idx, (ds_imgs, labels) in tqdm(enumerate(train_loader, start=1), total=tot_len):
 
-            ds_imgs = ds_imgs.to(args.device, non_blocking=True).unsqueeze(dim=1)
-            labels = labels.to(args.device, non_blocking=True).unsqueeze(dim=1)
+            ds_imgs = ds_imgs.to(args.device).unsqueeze(dim=1)
+            labels = labels.to(args.device).unsqueeze(dim=1)
 
             optimizer.zero_grad()
             pred_residuals = model(ds_imgs)  # Predicted residuals are outputs.
@@ -127,8 +129,8 @@ def main(args):
         tot_len = len(val_loader.dataset) // args.batch_size
         for idx, (ds_imgs, labels) in tqdm(enumerate(val_loader, start=1), total=tot_len):
 
-            ds_imgs = ds_imgs.to(args.device, non_blocking=True).unsqueeze(dim=1)
-            labels = labels.to(args.device, non_blocking=True).unsqueeze(dim=1)
+            ds_imgs = ds_imgs.to(args.device).unsqueeze(dim=1)
+            labels = labels.to(args.device).unsqueeze(dim=1)
             pred_residuals = model(ds_imgs)
             recons = pred_residuals + ds_imgs
 
@@ -168,12 +170,12 @@ if __name__ == '__main__':
 
     # A hack to allow me maximum control over my training options.
     default_args = dict(
-        batch_size=2,   # Batch size of 2 is enough to saturate my GPUs. 1 is almost enough but not quite.
-        num_workers=3,
+        batch_size=1,   # Batch size of 2 is enough to saturate my GPUs. 1 is almost enough but not quite.
+        num_workers=2,
         init_lr=1E-3,
         gpu=1,  # Set to None for CPU mode.
-        num_epochs=500,
-        max_to_keep=1,
+        num_epochs=100,
+        max_to_keep=5,
         verbose=False,
         save_best_only=True,
         train_root='data/multicoil_train',

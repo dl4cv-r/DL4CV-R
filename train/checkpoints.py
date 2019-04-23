@@ -10,11 +10,19 @@ class CheckpointManager:
     Giving up on saving as HDF5 files like in Keras. Just too annoying.
     Note that the whole system is based on 1 indexing, not 0 indexing.
     """
-    def __init__(self, model, optimizer, save_best_only=True, ckpt_dir='./checkpoints', max_to_keep=5):
+    def __init__(self, model, optimizer=None, save_best_only=True, ckpt_dir='./checkpoints', max_to_keep=5):
 
         # Type checking.
         assert isinstance(model, nn.Module), 'Not a Pytorch Model'
-        assert isinstance(optimizer, optim.Optimizer), 'Not a Pytorch Optimizer'
+
+        if optimizer is None:
+            print('No optimizer was given. Saving only the model.')
+            self.save_optimizer = False
+        else:
+            assert isinstance(optimizer, optim.Optimizer), 'Not a Pytorch Optimizer'
+            print('Optimizer was provided. Saving both model and optimizer.')
+            self.save_optimizer = True
+
         assert isinstance(max_to_keep, int) and (max_to_keep >= 0), 'Not a non-negative integer'
         ckpt_path = Path(ckpt_dir)
         assert ckpt_path.exists(), 'Not a valid, existing path'
@@ -43,7 +51,12 @@ class CheckpointManager:
 
     def _save(self, ckpt_name=None):
         self.save_counter += 1
-        save_dict = {'model_state_dict': self.model.state_dict(), 'optimizer_state_dict': self.optimizer.state_dict()}
+        if self.save_optimizer:
+            save_dict = {'model_state_dict': self.model.state_dict(),
+                         'optimizer_state_dict': self.optimizer.state_dict()}
+        else:
+            save_dict = {'model_state_dict': self.model.state_dict()}
+
         save_path = self.ckpt_path / (f'{ckpt_name}.tar' if ckpt_name else f'ckpt_{self.save_counter:03d}.tar')
 
         torch.save(save_dict, save_path)
