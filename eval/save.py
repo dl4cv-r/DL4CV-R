@@ -34,6 +34,28 @@ def save_reconstructions(reconstructions, out_dir):
         print('Finished')
 
 
+def make_val_loader(args):
+    if args.single_coil:
+        val_dir = '/home/veritas/PycharmProjects/DL4CV-R/data/singlecoil_val'
+    else:
+        val_dir = '/home/veritas/PycharmProjects/DL4CV-R/data/multicoil_val'
+
+    dataset = SubmissionDataset(val_dir, transform=submission_slice_normalize_and_clip,
+                                single_coil=args.single_coil, acc_fac=args.acc_fac, test_set=False, seed=9872)
+    return DataLoader(dataset, args.batch_size, num_workers=args.num_workers)
+
+
+def make_test_loader(args):
+    if args.single_coil:
+        test_dir = '/home/veritas/PycharmProjects/DL4CV-R/data/singlecoil_test'
+    else:
+        test_dir = '/home/veritas/PycharmProjects/DL4CV-R/data/multicoil_test'
+
+    dataset = SubmissionDataset(test_dir, transform=submission_slice_normalize_and_clip,
+                                single_coil=args.single_coil, acc_fac=args.acc_fac, test_set=True)
+    return DataLoader(dataset, args.batch_size, num_workers=args.num_workers)
+
+
 def restore_and_run_residual_model(args):
     from models.unet import UnetModel  # Might have to change model every time.
     torch.autograd.set_grad_enabled(False)  # Turns off gradient calculation.
@@ -43,10 +65,10 @@ def restore_and_run_residual_model(args):
     model.load_state_dict(state_dict=torch.load(args.ckpt_path)['model_state_dict'])
     model.eval()
 
-    dataset = SubmissionDataset(args.data_root, transform=submission_slice_normalize_and_clip,
-                                single_coil=args.single_coil, acc_fac=args.acc_fac)
-
-    data_loader = DataLoader(dataset, args.batch_size, num_workers=args.num_workers)
+    if args.test_set:
+        data_loader = make_test_loader(args)
+    else:
+        data_loader = make_val_loader(args)
 
     reconstructions = defaultdict(list)
 
@@ -85,22 +107,27 @@ def restore_and_run_residual_model(args):
 
 if __name__ == '__main__':
     defaults = dict(
-        gpu=0,
-        ckpt_path='/home/veritas/PycharmProjects/DL4CV-R/checkpoints/Trial 01  2019-04-22 18-19-33/ckpt_027.tar',
-        data_root='/home/veritas/PycharmProjects/DL4CV-R/data/multicoil_val',
+        gpu=1,
+        ckpt_path='/home/veritas/PycharmProjects/DL4CV-R/checkpoints/Trial 02  2019-04-23 18-40-17/ckpt_025.tar',
+        data_root='/home/veritas/PycharmProjects/DL4CV-R/data/multicoil_test',
+        test_set=True,
         single_coil=False,
         batch_size=12,
         num_workers=4,
-        acc_fac=None,  # This is because the validation set currently produces outputs for both 4-fold and 8-fold data
+        acc_fac=None,
         out_root='./submissions',
-        out_name='residual_unet_val_set_8'
+        out_name='residual_test_unet'
     )
-
-    # TODO: Fix the dataset system so that the validation set outputs just one of 4 or 8 fold acc.
-    # Currently, both are being output and thus make outputs for both, making sorting and simple comparison impossible.
-    # Also, training everything double time might be unfair in terms of reported epoch numbers etc.
 
     p_args = create_arg_parser(**defaults).parse_args()
 
     restore_and_run_residual_model(p_args)
 
+# /home/veritas/PycharmProjects/DL4CV-R/eval/submissions/residual_unet_val_set --challenge multicoil
+# MSE = 5.825e-11 +/- 1.824e-10 NMSE = 0.01228 +/- 0.01336 PSNR = 35.34 +/- 4.856 SSIM = 0.8742 +/- 0.124
+# /home/veritas/PycharmProjects/DL4CV-R/eval/submissions/residual_unet_val_set_24 --challenge multicoil
+# MSE = 5.82e-11 +/- 1.825e-10 NMSE = 0.01228 +/- 0.01343 PSNR = 35.35 +/- 4.866 SSIM = 0.8744 +/- 0.124
+
+# python eval/evaluate.py --target-path /media/veritas/D/fastMRI/singlecoil_val
+# --predictions-path /home/veritas/PycharmProjects/DL4CV-R/eval/submissions/single_val_trial --challenge singlecoil
+# MSE = 3.229e-10 +/- 4.542e-10 NMSE = 0.1406 +/- 0.2271 PSNR = 26.35 +/- 8.352 SSIM = 0.5935 +/- 0.2834

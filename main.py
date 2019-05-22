@@ -51,7 +51,8 @@ def main(args):
 
     # Create Datasets
     train_dataset = TrainingDataset(args.train_root, transform=slice_normalize_and_clip, single_coil=False)
-    val_dataset = TrainingDataset(args.val_root, transform=slice_normalize_and_clip, single_coil=False)
+    val_dataset = TrainingDataset(  # Shrink val time by half. Consistent comparison remains.
+        args.val_root, transform=slice_normalize_and_clip, single_coil=False, use_double=False, seed=9872)
 
     train_loader = DataLoader(
         train_dataset, args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
@@ -141,7 +142,7 @@ def main(args):
                 print(f'Validation loss Epoch {epoch:03d} Step {idx:03d}: {step_loss.item()}')
 
             if args.max_imgs:
-                pass  # Implement saving images to TensorBoard.
+                pass  # TODO: Implement saving images to TensorBoard.
 
         else:
             toc = int(time() - tic)

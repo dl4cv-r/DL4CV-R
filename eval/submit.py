@@ -1,5 +1,6 @@
 import json
 import time
+from pathlib import Path
 
 
 def create_submission_file(
@@ -51,14 +52,15 @@ def main():
 
     time_string = time.strftime('%Y-%m-%d_%H-%M', time.localtime(time.time()))
 
-    submission_dir = f'submissions/multi_coil_zero_submission_{time_string}.json'
-    # A url that allows direct downloads by machines. Use Google Cloud Platform or AWS, not Google Drive, etc.
-    direct_download_url = \
-        'https://storage.googleapis.com/fastmri-challenge-submissions/multicoil_test_zero_submission.zip'
+    name = 'residual_unet'
 
-    name = 'Nothing'
+    submission_dir = Path('./submissions') / f'{name}_{time_string}.json'
+    # A url that allows direct downloads by machines. Use Google Cloud Platform or AWS, not Google Drive, etc.
+    direct_download_url = 'https://storage.googleapis.com/fastmri-challenge-submissions/residual_test_unet.zip'
+
+    name = 'Residual UNET'
     description = '''
-    The purpose of this submission is to check the quality of the aliased multi-coil images without any reconstruction.
+    Trying out UNET with residual outputs. Probably a failed experiment.
     '''
     members = ['veritas9872']
 

@@ -11,7 +11,7 @@ class TrainingDataset(Dataset):
     Loads downsampled images from HDF5 files.
     This makes a lot of presumptions about how the data is structured in folders.
     """
-    def __init__(self, data_root, transform, single_coil=False, acc_fac=None):
+    def __init__(self, data_root, transform, single_coil=False, acc_fac=None, use_double=True, seed=None):
 
         super().__init__()
 
@@ -22,6 +22,8 @@ class TrainingDataset(Dataset):
         self.transform = transform
         self.acc_fac = acc_fac
         self.recons_key = 'reconstruction_esc' if single_coil else 'reconstruction_rss'
+        self.use_double = use_double  # I wonder whether I need this.
+        self.seed = seed  # Only relevant when use_double=True
 
         data_path = Path(self.data_root)
 
@@ -34,8 +36,22 @@ class TrainingDataset(Dataset):
         else:
             data_path_4 = data_path / '4'
             data_path_8 = data_path / '8'
-            data_paths = list(data_path_4.glob('*.h5')) + list(data_path_8.glob('*.h5'))
-            data_paths.sort()
+
+            data_files_4 = list(data_path_4.glob('*.h5'))
+            data_files_4.sort()
+            data_files_8 = list(data_path_8.glob('*.h5'))
+            data_files_8.sort()
+
+            # I am adding this option because I do not like the loss of training data opportunities that
+            # I am creating with my implementation of file selection.
+            # It is too annoying to reselect volumes every epoch anew.
+            # Use this even if it means unfair comparison of epoch length.
+            if self.use_double:
+                data_paths = data_files_4 + data_files_8
+            else:
+                data_paths = self.make_mixed_data_path(data_files_4, data_files_8)
+
+        self.data_paths = data_paths
 
         label_path = data_path / self.recons_key
         label_paths = [str(file) for file in label_path.glob('*.h5')]
@@ -58,6 +74,27 @@ class TrainingDataset(Dataset):
 
     def __len__(self):
         return self.num_slices
+
+    def make_mixed_data_path(self, data_files_4, data_files_8):
+        """
+        My hack to randomly select either 4 or 8 fold data.
+        This implementation does not depend on the name of the file as in the original but on the seed.
+        I am using this for fair comparison of epoch number
+        with the original and probably most other implementations.
+        """
+        size = len(data_files_4)
+        assert size == len(data_files_8), 'Incorrect length.'
+
+        data_paths = list()
+        includes = np.random.RandomState(self.seed).uniform(size=size) < 0.5  # Make random boolean for choice.
+        for idx, include in enumerate(includes):
+            if include:
+                data_paths.append(data_files_4[idx])
+            else:
+                data_paths.append(data_files_8[idx])
+
+        data_paths.sort()
+        return data_paths
 
     @staticmethod
     def get_slice_number(file_name):  # For data files only, not label files.
@@ -97,7 +134,7 @@ class SubmissionDataset(Dataset):
     Loads downsampled images from HDF5 files.
     This makes a lot of presumptions about how the data is structured in folders.
     """
-    def __init__(self, data_root, transform, single_coil=False, acc_fac=None):
+    def __init__(self, data_root, transform, single_coil=False, acc_fac=None, test_set=False, seed=None):
 
         super().__init__()
 
@@ -108,6 +145,8 @@ class SubmissionDataset(Dataset):
         self.transform = transform
         self.acc_fac = acc_fac
         self.recons_key = 'reconstruction_esc' if single_coil else 'reconstruction_rss'
+        self.seed = seed
+        self.test_set = test_set
 
         data_path = Path(self.data_root)
 
@@ -116,11 +155,20 @@ class SubmissionDataset(Dataset):
         if self.acc_fac:
             data_path_ = data_path / str(self.acc_fac)
             data_paths = list(data_path_.glob('*.h5'))
-            data_paths.sort()
         else:
             data_path_4 = data_path / '4'
             data_path_8 = data_path / '8'
-            data_paths = list(data_path_4.glob('*.h5')) + list(data_path_8.glob('*.h5'))
+
+            data_files_4 = list(data_path_4.glob('*.h5'))
+            data_files_4.sort()
+            data_files_8 = list(data_path_8.glob('*.h5'))
+            data_files_8.sort()
+
+            if self.test_set:
+                data_paths = list(data_path_4.glob('*.h5')) + list(data_path_8.glob('*.h5'))
+            else:  # A quirk of my data organization, where train and val have both 4 and 8 fold data of all blocks.
+                data_paths = self.make_mixed_data_path(data_files_4, data_files_8)
+
             data_paths.sort()
 
         if not data_paths:  # If the list is empty for any reason
@@ -140,6 +188,27 @@ class SubmissionDataset(Dataset):
 
     def __len__(self):
         return self.num_slices
+
+    def make_mixed_data_path(self, data_files_4, data_files_8):
+        """
+        My hack to randomly select either 4 or 8 fold data.
+        This implementation does not depend on the name of the file as in the original but on the seed.
+        I am using this for fair comparison of epoch number
+        with the original and probably most other implementations.
+        """
+        size = len(data_files_4)
+        assert size == len(data_files_8), 'Incorrect length.'
+
+        data_paths = list()
+        includes = np.random.RandomState(self.seed).uniform(size=size) < 0.5  # Make random boolean for choice.
+        for idx, include in enumerate(includes):
+            if include:
+                data_paths.append(data_files_4[idx])
+            else:
+                data_paths.append(data_files_8[idx])
+
+        data_paths.sort()
+        return data_paths
 
     @staticmethod
     def get_slice_number(file_name):  # For data files only, not label files.
