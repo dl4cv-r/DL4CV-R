@@ -52,20 +52,19 @@ def main():
 
     time_string = time.strftime('%Y-%m-%d_%H-%M', time.localtime(time.time()))
 
-    name = 'residual_unet'
+    name = 'gan_model'
 
     submission_dir = Path('./submissions') / f'{name}_{time_string}.json'
     # A url that allows direct downloads by machines. Use Google Cloud Platform or AWS, not Google Drive, etc.
-    direct_download_url = 'https://storage.googleapis.com/fastmri-challenge-submissions/residual_test_unet.zip'
+    direct_download_url = 'https://storage.googleapis.com/fastmri-challenge-submissions/multicoil_test_default.zip'
 
-    name = 'Residual UNET'
     description = '''
-    Trying out UNET with residual outputs. Probably a failed experiment.
+    Basic GAN model for comparison with other models. Uses VGG features as part of the loss.
     '''
-    members = ['veritas9872']
+    members = ['veritas9872', 'yjuyoung', 'vinvino01', 'EOLab']
 
     create_submission_file(json_out_file=submission_dir, challenge=challenge, submission_url=direct_download_url,
-                           model_name=name, model_description=description, nyu_data_only=True, participants=members)
+                           model_name=name, model_description=description, nyu_data_only=False, participants=members)
 
 
 if __name__ == '__main__':

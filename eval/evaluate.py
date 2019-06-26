@@ -84,7 +84,7 @@ def evaluate(args, recons_key):
 
     for tgt_file in args.target_path.iterdir():
         with h5py.File(tgt_file, mode='r') as target, h5py.File(
-          args.predictions_path / tgt_file.name) as recons:
+          args.predictions_path / tgt_file.name, mode='r') as recons:
             if args.acquisition and args.acquisition != target.attrs['acquisition']:
                 continue
             target = np.asarray(target[recons_key])
